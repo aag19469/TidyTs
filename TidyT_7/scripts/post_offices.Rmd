@@ -1,0 +1,110 @@
+---
+title: "post_offices"
+author: "Anthony Gutierrez"
+date: "5/2/2021"
+output:
+  html_document:
+    rmdformats::readthedown
+---
+
+# Load Libraries 
+```{r}
+library(tidyverse)
+library(here)
+library(tidytuesdayR) # loading in the TT data
+library(cowsay)
+library(maps)
+library(mapdata)
+library(mapproj)
+```
+
+
+```{r}
+say("MonkE", by = "monkey")
+```
+
+
+# Load the data
+
+```{r}
+# This is the transit data
+tuesdata7 <- tt_load("2021-04-13") # load in tidyT data
+
+post_offices <- tuesdata7$post_offices
+
+# get data for states
+states<-map_data("state") %>%
+  filter(region == "california")
+
+```
+
+#Introduction
+I am going to plot all the post offices that have been established since 1850
+
+
+# Data Manipulation
+
+```{r}
+#filter data for California and coordinates included
+
+Cali <- post_offices %>%
+  filter(state == "CA", coordinates != "FALSE") %>%  # only look at california and remove anything that is missing coordinates 
+  select(state, orig_county, id, coordinates, gnis_elev_in_m, latitude, longitude) #select for only state and coordinates
+
+```
+
+
+# Plot
+
+```{r}
+#This plot shows the coordinates of California and the post offices within it.
+
+ggplot()+
+  geom_polygon(data = states, aes(x = long, #Create polygon for shape of California 
+                                  y = lat, 
+                                  group = group))+
+  guides(fill = FALSE)+
+geom_point(data = Cali, # add a point at all my sites 
+           aes(x = longitude, 
+               y = latitude))+
+     theme_minimal()+ #minimalistic theme
+  theme(panel.background = element_rect(fill = "lightblue"))+ #set background color as light blue
+  coord_map(projection = "mercator")+ # mercator projection of the data
+  labs(title = "Historic Post Office Locations in the State of Cailifornia",
+       x = "Longitude", 
+       y = "Latitude", 
+       legend = "California")+ #assign names to the titles and axis's
+    ggsave(here("TidyT_7", "outputs", "Cali_post_offices_coordinates.png"), #save to outputs
+         width = 7, height = 5)
+```
+
+
+# Testing and altering
+```{r}
+#This plot shows a more publication worthy figure
+
+ggplot()+
+  geom_polygon(data = states, aes(x = long, #Create polygon for shape of California 
+                                  y = lat, 
+                                  group = group))+
+  guides(fill = FALSE)+
+geom_point(data = Cali, # add a point at all my sites 
+           aes(x = longitude, 
+               y = latitude))+
+  theme(panel.background = element_rect(fill = "lightblue"))+  #set background color as light blue
+  coord_map(projection = "mercator")+ # mercator projection of the data
+  labs(title = "Historic Post Office Locations in the State of Cailifornia",
+       subtitle = "Blevins, Cameron; Helbock, Richard W., 2021, US Post Offices",
+       caption = "https://doi.org/10.7910/DVN/NUKCNA, \n Harvard Dataverse, V1, \n UNF:6:8ROmiI5/4qA8jHrt62PpyA== [fileUNF]") +
+  theme_void()+
+  theme(axis.text.x = element_blank(), #got rid of axis's because they are unnecessary 
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        rect = element_blank())+
+  ggsave(here("TidyT_7", "outputs", "Cali_post_offices.png"), #save to outputs
+         width = 7, height = 5)
+  
+```
+
