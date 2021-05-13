@@ -1,0 +1,107 @@
+---
+title: "Deforestation"
+author: "Anthony Gutierrez"
+date: "5/2/2021"
+output:
+  html_document:
+    rmdformats::readthedown
+---
+
+# Load Libraries 
+```{r}
+library(tidyverse)
+library(here)
+library(tidytuesdayR) # loading in the TT data
+library(cowsay)
+```
+
+
+```{r}
+say("Finished", by = "hypnotoad")
+```
+
+
+# Introduction
+
+The goal of this TidyTuesday is to create a figure that explains the reason for forest loss in Brazil 
+
+
+# Load Data
+```{r}
+# This is the transit data
+tuesdata8 <- tt_load("2021-04-06") # load in tidy data
+
+Brazil_loss <- tuesdata8$brazil_loss 
+
+View(Brazil_loss)
+
+```
+
+
+# Wrangle Data 
+
+```{r}
+#### Select only the some colonies
+loss <- Brazil_loss %>% 
+  select(3:4, 6:9, 11:14) #select for the most prominant reasons, exclude lesser reasons
+
+view(loss)
+```
+
+
+```{r}
+# Pivot longer all reasons for deforestation 
+R_pivot <- loss %>% 
+  pivot_longer(cols = commercial_crops:small_scale_clearing, # the cols you want to pivot. This says select the reasons for deforestation. 
+               names_to = "Reasons", # the names of the new cols with all the column names
+               values_to = "Values")
+
+view(R_pivot)
+```
+
+```{r}
+plot_data<- R_pivot %>% 
+  mutate(
+    Reason_for_Tree_Loss = case_when( #recode to be capitalized and seperated
+    Reasons == "commercial_crops" ~ "Commercial Crops",
+    Reasons == "pasture" ~ "Pasture",
+    Reasons == "natural_disturbances" ~ "Natural Disturbances",
+    Reasons == "selective_logging" ~ "Selective Logging",
+    Reasons == "fire" ~ "Fire",
+    Reasons == "other_infrastructure" ~ "Other Infrastructure",
+    Reasons == "roads" ~ "Roads",
+    Reasons == "tree_plantations_including_palm" ~ "Tree Plantations", 
+    Reasons == "small_scale_clearing" ~ "Small-Scale Clearing"))
+
+
+view(plot_data)
+```
+
+
+
+
+
+```{r}
+plot_data %>%
+  ggplot(aes(y = Values, #create plot of tree loss against time
+             x = year,
+             color = Reason_for_Tree_Loss))+
+  geom_col()+ # create column plot 
+  guides(fill = FALSE)+ #removed legend
+  labs(title = "Brazil's Deforestation", #add titles and labels
+       subtitle = "Fiscal Years 2001-2013",
+       caption = "Hannah Ritchie and Max Roser (2021) - 'Forests and Deforestation.' \n OurWorldInData.org.",
+       x = "Year", y = "Trees lost")+ #rename axis's
+  theme_minimal() +
+  ggsave(here("TidyT_8","outputs", "Brazil's Tree loss.png"), #save to outputs
+         width = 7, height = 5)
+
+```
+
+
+# Done with last Tidy Tuesday!
+```{r}
+library(praise)
+praise() #congratulate yourself!
+```
+
