@@ -1,0 +1,82 @@
+---
+title: "Tidy5"
+author: "Anthony Gutierrez"
+date: "4/24/2021"
+output:
+  html_document:
+    rmdformats::readthedown
+---
+
+# Libraries 
+
+```{r}
+library(tidyverse)
+library(here)
+library(tidytuesdayR) # loading in the TT data
+library(cowsay)
+library(kableExtra)
+```
+
+```{r}
+say("moo", by = "shark")
+```
+
+# Load Data
+
+```{r}
+# This is the transit data
+tuesdata5 <- tt_load("2021-01-05")
+
+transit <- tuesdata5$transit_cost
+
+```
+
+# Introduction 
+Goal of this Tidy Tuesday is to find the average number of stations in each city of China. 
+
+
+# Data Manipulation
+
+```{r}
+# China Only 
+City <- transit %>%
+  filter(country == "CN") #look at only China 
+
+```
+
+```{r}
+station <- City %>%
+  group_by(country, city) %>% # only look at country and city
+  summarise(station_num = mean(stations, na.rm = TRUE)) # new column for avg number of stations in each city 
+  
+  
+station %>% 
+  kbl() #create kable table for dataset of China and it's cities mean number of stations 
+```
+
+
+# Plot
+
+```{r}
+station %>%
+  ggplot(aes(x = fct_reorder(city, station_num), y = station_num))+ 
+  geom_col()+
+  labs(y = "Number of stations")+ 
+  coord_flip()+ # flip the x and y axis 
+  labs(title = "Number of Train Stations in China by City",
+       caption = "Source: 'Transit Cost Project' \n -Boston's Green Line", #add descriptive titles for all aspects of the figure 
+       x = "City")+
+  ggsave(here("TidyT_5", "outputs", "China's_train_stations.png"), #save to outputs
+         width = 7, height = 5) #save figure to outputs
+
+```
+
+
+# Goodbye
+```{r}
+# create meme 
+library(memer)
+meme_get("DistractedBf") %>% 
+  meme_text_distbf("totally \n awesome \n R packages", "Me", "TidyT \n assignment") 
+```
+

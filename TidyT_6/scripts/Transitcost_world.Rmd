@@ -2,7 +2,9 @@
 title: "Tidy6"
 author: "Anthony Gutierrez"
 date: "4/24/2021"
-output: html_document
+output:
+  html_document:
+    rmdformats::readthedown
 ---
 
 
@@ -27,8 +29,10 @@ say("woof", by = "cat")
 # This is the transit data
 tuesdata6 <- tt_load("2021-01-05")
 country_datadic <- read_csv(here("TidyT_6","data", "Country_data_dictionary.csv"))
+view(country_datadic)
 
 currency_datadic <- read_csv(here("TidyT_6","data", "Currency_data_dictionary.csv"))
+view(currency_datadic)
 
 transit <- tuesdata6$transit_cost
 
@@ -46,6 +50,7 @@ I will convert all currency to USD by individually filtering each currency and c
 
 # Currency conversion
 ```{r}
+# convert all currency to US dollars 
 USD_USD <- transit %>%
   mutate(XUSD = case_when(
     currency == "AUD" ~ cost*1.29,
@@ -60,7 +65,7 @@ USD_USD <- transit %>%
     currency == "INR" ~ cost/74.9,
     currency == "JPY" ~ cost/107.9,
     currency == "USD" ~ cost)) %>%
-  filter(complete.cases(.))
+  filter(complete.cases(.)) 
 
 view(USD_USD)
 
@@ -83,7 +88,8 @@ USD_USD %>%
          show.legend = FALSE)+ 
   geom_boxplot()+
   labs(title = "Cost of Train Transportation (USD) per Country currency",
-       y = "Cost (USD)")+
+       y = "Cost (USD)",
+       caption = "Source: 'Transit Cost Project' \n -Boston's Green Line")+ #add descriptive titles for all aspects of the figure 
   theme_classic()+
   theme(axis.text.x = element_blank())+
   ggsave(here("TidyT_6", "outputs", "Transit_cost.png"), #save to outputs
@@ -105,6 +111,7 @@ USD_USD %>%
   facet_wrap(~currency, scales = "free")+ #group boxes by currency 
   labs(title = "Cost of Train Transporter by Country Per Year",
        subtitle = "Categorized by Currency",
+       caption = "Source: 'Transit Cost Project' \n -Boston's Green Line",
        x = "Year",
        y = "Cost (USD)",
        legend = "Country")+ #add descriptive titles for all aspects of the figure 
