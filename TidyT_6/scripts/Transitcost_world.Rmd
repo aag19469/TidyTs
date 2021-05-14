@@ -1,0 +1,121 @@
+---
+title: "Tidy6"
+author: "Anthony Gutierrez"
+date: "4/24/2021"
+output: html_document
+---
+
+
+# Libraries 
+
+```{r}
+library(tidyverse)
+library(here)
+library(tidytuesdayR) # loading in the TT data
+library(cowsay)
+```
+
+
+```{r}
+say("woof", by = "cat")
+```
+
+
+# Load Data
+
+```{r}
+# This is the transit data
+tuesdata6 <- tt_load("2021-01-05")
+country_datadic <- read_csv(here("TidyT_6","data", "Country_data_dictionary.csv"))
+
+currency_datadic <- read_csv(here("TidyT_6","data", "Currency_data_dictionary.csv"))
+
+transit <- tuesdata6$transit_cost
+
+```
+
+
+# Introduction 
+Goal of this Tidy Tuesday is to find the average cost of train transit per year by currency type. I will first convert currency to USD. 
+
+
+# Data Manipulation
+I will convert all currency to USD by individually filtering each currency and calculating the conversion. 
+
+############## IS THERE A WAY TO SUMMARIZE THE USD FOR ALL THREE TO CREATE A SINGLE COLUMN ############
+
+# Currency conversion
+```{r}
+USD_USD <- transit %>%
+  mutate(XUSD = case_when(
+    currency == "AUD" ~ cost*1.29,
+    currency == "BD" ~  cost/84.740,
+    currency == "BDT" ~ cost/84.740,
+    currency == "BRL" ~ cost/5.5,
+    currency == "CAD" ~ cost/1.25,
+    currency == "CHF" ~ cost*1.1,
+    currency == "CNY" ~ cost/6.25,
+    currency == "EGP" ~ cost/15.7,
+    currency == "EUR" ~ cost*1.21,
+    currency == "INR" ~ cost/74.9,
+    currency == "JPY" ~ cost/107.9,
+    currency == "USD" ~ cost)) %>%
+  filter(complete.cases(.))
+
+view(USD_USD)
+
+
+#XUSD <- USD_USD %>%
+  
+
+```
+
+
+
+# Average cost by countries
+
+```{r}
+
+# Box plots of averages by countries that use the listed currencies
+USD_USD %>%
+  ggplot(aes(y = XUSD, 
+             color = currency),#plot cost of transit by currency type
+         show.legend = FALSE)+ 
+  geom_boxplot()+
+  labs(title = "Cost of Train Transportation (USD) per Country currency",
+       y = "Cost (USD)")+
+  theme_classic()+
+  theme(axis.text.x = element_blank())+
+  ggsave(here("TidyT_6", "outputs", "Transit_cost.png"), #save to outputs
+         width = 7, height = 5) #save figure to outputs
+      
+```
+
+
+
+
+# Changing prices per year by country
+```{r}
+USD_USD %>%
+  filter(currency == c("CAD", "CNY", "EUR", "INR", "JPY", "USD")) %>% #select for most frequently used currencies in this dataset
+  ggplot(aes(x = year,
+             y = XUSD, # plot cost of transportation on a yealy basis
+             color = country))+ 
+  geom_point()+ # points for each counrty that spent x amount of USD
+  facet_wrap(~currency, scales = "free")+ #group boxes by currency 
+  labs(title = "Cost of Train Transporter by Country Per Year",
+       subtitle = "Categorized by Currency",
+       x = "Year",
+       y = "Cost (USD)",
+       legend = "Country")+ #add descriptive titles for all aspects of the figure 
+  ggsave(here("TidyT_6", "outputs", "Transit_cost_facet.png"), #save to outputs
+         width = 7, height = 5) #save figure to outputs
+```
+
+
+
+
+
+
+
+
