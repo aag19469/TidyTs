@@ -4,7 +4,7 @@ author: "Anthony Gutierrez"
 date: "4/22/2021"
 output:
   html_document:
-    df_print: paged
+    rmdformats::readthedown
 ---
 
 # Libraries 
