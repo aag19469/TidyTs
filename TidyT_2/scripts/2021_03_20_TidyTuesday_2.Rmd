@@ -1,0 +1,181 @@
+---
+title: "Tidy Tuesday 2"
+author: "Anthony Gutierrez"
+date: "3/20/2021"
+output:
+  html_document:
+    rmdformats::readthedown
+---
+
+# Load Libraries 
+```{r setup, include=FALSE}
+library(tidyverse)
+library(here)
+library(tidytuesdayR) # loading in the TT data
+library(RColorBrewer)
+library(plotly)
+library(cowsay)
+
+library(patchwork)
+```
+
+
+```{r}
+say("Eat Mor Chikin", by = "cow")
+```
+
+
+
+# Load Data 
+```{r}
+tuesdata <- tt_load("2021-02-16") # Load census data of persons
+Census <- tuesdata$census
+
+View(Census)
+
+```
+
+# Introduction
+
+The goal of this second Tidy Tuesday is to create a pie chart distribution of the average number of persons per race from the years 1790 - 1830 and from 1831 - 1870. 
+
+I will start by learning how to create a pi chart and include my examples to keep record of my progress. Skip to "Create pi chart using the Census data" for my figures.
+
+If I am unable to do this, I will create a single pie chart of all years.
+
+# Learing how to create a pi chart
+
+
+Functions:
+
+"x" is a vector containing the numeric values used in the pie chart  
+
+"labels" is used to give description to the slices.  
+
+"main" indicates the title of the chart  
+
+"col" indicates the color palette  
+
+"clockwise" is a logical value indicating if the slices are drawn clockwise or counterclockwise  
+
+"int.angle" determines the starting angle of the slices, from 0 to 360. 
+
+"$" dollar sign is a way to reference a column. 
+
+
+Practicing using pie chart function
+```{r}
+color<- brewer.pal(length(count), "Set1") #define color
+```
+Example
+```{r}
+count<- c(7, 25, 16, 12, 10,30)
+
+pie(count, #creates pie chart as 1 - 6 counterclockwise 
+    clockwise = TRUE, #makes clockwise
+    labels = count, #shows actual values of counts
+    col = color)
+
+```
+
+Creating a 3D pi Chart
+```{r}
+library(plotrix) 
+slices <- c(10, 12, 4, 16, 8) #assigning random numbers 
+lbls <- c("US", "UK", "Australia", "Germany", "France") #Naming slices
+pie3D(slices,labels=lbls,explode=0.1, # makes pi charts 3D
+   main="Pie Chart of Countries ") #giving title 
+```
+
+
+
+Creating pie chart with example data
+```{r}
+# Pie Chart from data frame with Appended Sample Sizes
+mytable <- table(iris$Species)
+lbls <- paste(names(mytable), "\n", mytable, sep="")
+
+pie(mytable, labels = lbls,
+   main="Pie Chart of Species\n (with sample sizes)")
+
+view (iris)
+
+view(mytable)
+```
+
+
+# Create pi chart using the Census data
+
+## Pivot data 
+
+```{r}
+view(Census)
+
+R_pivot <- Census %>% 
+  pivot_longer(cols = total:black_slaves, # the cols you want to pivot. This says select the all the types of persons positions/ status's. 
+                 names_to = "Person_Status", # put the names of all person's status under one column
+               values_to = "Values") %>% # put the number of persons in each catergory under values column
+  filter(region == "USA Total") #look at national level data only 
+
+view(R_pivot)
+
+```
+
+
+# Manipulate data for two different time periods
+
+```{r}
+data<- R_pivot %>%
+  filter(year == 1790, 
+         Person_Status != "total") #filter for the year 1790 and exclude total number
+
+
+data2<- R_pivot %>%
+  filter(year == 1870,
+         Person_Status != "total") #filter for the year 1870 and exclude total number
+```
+
+
+# Create Pi Charts 
+
+```{r}
+# Pie chart with plotly for all person's statuses in 1790
+
+a <- plot_ly(data = data, labels = ~Person_Status, values = ~Values, # load in data, labels to status, values to number of persons under each category
+             type = 'pie', sort= FALSE, #create pie chart
+            marker= list(colors=colors, line = list(color="black", width=1))) %＞% #fills in pie slices
+            layout(title="Person's Status in the United States, 1790") #add title
+
+a 
+```
+
+```{r}
+# Pie chart with plotly for all person's statuses in 1870
+
+b <- plot_ly(data = data2, labels = ~Person_Status, values = ~Values, # load in data, labels to status, values to number of persons under each category
+             type = 'pie', sort= FALSE, #create pie chart
+            marker= list(colors=colors, line = list(color="black", width=1))) %＞% #fills in pie slices
+            layout(title="Person's Status in the United States, 1870") #add title
+b
+
+#It should be noted that slavery was abolished 1865
+```
+
+
+# Create column figure with Census data
+
+```{r}
+R_pivot %>%
+  ggplot(aes(y = Values, #Create chart of persons over time in the united states
+             x = year,
+             color = Person_Status))+
+  geom_col()+ # create column plot 
+  labs(title = "Slavery in the United States", #add titles and labels
+       subtitle = "Fiscal Years 1790 - 1870",
+       caption = " Anthony Starks, Allen Hillery Sekou Tyler \n https://github.com/rfordatascience/tidytuesday/tree/master/data/2021/2021-02-16.", #site data source
+       x = "Year", y = "Persons")+ #rename axis's
+  theme_minimal() + #add theme
+  ggsave(here("TidyT_2","outputs", "Slavery in the United States.png"), #save to outputs
+         width = 7, height = 5)
+```
+
