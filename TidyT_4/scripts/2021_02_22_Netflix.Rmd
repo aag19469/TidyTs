@@ -1,0 +1,104 @@
+---
+title: "TidyT4"
+author: "Anthony Gutierrez"
+date: "4/22/2021"
+output:
+  html_document:
+    df_print: paged
+---
+
+# Libraries 
+```{r}
+library(tidyverse)
+library(here)
+library(tidytuesdayR) # loading in the TT data
+library(cowsay)
+library(kableExtra)
+```
+
+
+```{r}
+say("Good Morning???", by = "chicken")
+```
+
+
+# Load Data 
+```{r}
+# This is the Netflix census data
+tuesdata4 <- tt_load("2021-04-20") # Load TidyT data
+
+Netflix <- tuesdata4$netflix_titles #select file 
+
+
+```
+
+
+
+#Introduction 
+Create a graph of the average movie duration by country.
+Want to find the number of genres of film on Netflix.
+
+
+# Data Manipulation 
+
+```{r}
+NetRename<- Netflix %>%
+  rename("Film_Type" = "type") %>%  #change name of film category
+  filter(Film_Type == "Movie", #look at only movies 
+         country == c("Argentina", "Australia", "Brazil", "Canada", "Egypt")) # reduce number of countries to make smaller facet grid later
+
+
+View(NetRename)
+
+```
+
+
+```{r}
+# Want to find the average movie duration in each of the five countries 
+# MAKE DURATION NUMERIC
+
+test <- NetRename %>% 
+   separate(duration, into = c("length", "duration")) %>% #seperated duration column into numbers(character) and minutes (character)
+   mutate(movie_duration = as.numeric(length)) #create new column. numbers are now numeric
+
+view(test)
+
+```
+
+
+```{r}
+Movie_avg <-test %>%
+  group_by(country) %>% #select for countries 
+  summarise(mean_movie = mean(movie_duration)) #find the average movie duration for teh selected movies
+  
+
+Movie_avg %>%
+  kbl() %>% # make it a kable table of the movie duration for each country
+  kable_classic()
+
+```
+
+
+
+# Plot
+
+```{r}
+Movie_avg %>%
+  ggplot(aes(x = country, 
+             y = mean_movie,
+             color = country)) + #plot mean movie duration for each country
+  geom_col()+
+  labs(title = "Netflix Mean Movie Duration by Country",
+       subtitle = "Averaged over ~100 years",
+       caption = "Kaggle w/ credit to Shivam Bansal. \n https://github.com/rfordatascience/tidytuesday/tree/master/data/2021/2021-04-20",
+       x = "Country" , y = "Mean Movie Duration")+
+  theme_classic()+
+  theme(legend.position = "none")+
+  ggsave(here("TidyT_4","outputs", "Mean_movie_duration.png"), #save to outputs
+         width = 7, height = 5)
+
+```
+
+
+
+
